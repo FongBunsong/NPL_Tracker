@@ -1,5 +1,39 @@
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { formatDate } from './formatCurrency'
+
+function datedFilename(filename) {
+  return `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`
+}
+
+function downloadWorkbook(workbook, filename) {
+  return workbook.xlsx.writeBuffer().then(buffer => {
+    const blob = new Blob(
+      [buffer],
+      { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+    )
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = datedFilename(filename)
+    link.click()
+    URL.revokeObjectURL(url)
+  })
+}
+
+function addSheetFromJson(workbook, sheetName, data, minWidth = 14) {
+  const ws = workbook.addWorksheet(sheetName)
+  const headers = Object.keys(data[0] || {})
+
+  ws.columns = headers.map(header => ({
+    header,
+    key: header,
+    width: Math.max(header.length + 2, minWidth),
+  }))
+
+  data.forEach(row => ws.addRow(row))
+  ws.getRow(1).font = { bold: true }
+  ws.views = [{ state: 'frozen', ySplit: 1 }]
+}
 
 export function exportLoansToExcel(loans, filename = 'NPL_Report') {
   const data = loans.map(loan => ({
@@ -24,16 +58,9 @@ export function exportLoansToExcel(loans, filename = 'NPL_Report') {
     'Risk Score':          loan.riskScore,
   }))
 
-  const ws = XLSX.utils.json_to_sheet(data)
-  const wb = XLSX.utils.book_new()
-
-  // Auto-size columns
-  ws['!cols'] = Object.keys(data[0] || {}).map(key => ({
-    wch: Math.max(key.length, 14),
-  }))
-
-  XLSX.utils.book_append_sheet(wb, ws, 'NPL Loans')
-  XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`)
+  const wb = new ExcelJS.Workbook()
+  addSheetFromJson(wb, 'NPL Loans', data, 14)
+  return downloadWorkbook(wb, filename)
 }
 
 export function exportAlertsToExcel(alerts, filename = 'NPL_Alerts') {
@@ -49,15 +76,13 @@ export function exportAlertsToExcel(alerts, filename = 'NPL_Alerts') {
     'Resolved At': a.resolvedAt ? formatDate(a.resolvedAt) : '—',
   }))
 
-  const ws = XLSX.utils.json_to_sheet(data)
-  const wb = XLSX.utils.book_new()
-  ws['!cols'] = Object.keys(data[0] || {}).map(() => ({ wch: 18 }))
-  XLSX.utils.book_append_sheet(wb, ws, 'Alerts')
-  XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`)
+  const wb = new ExcelJS.Workbook()
+  addSheetFromJson(wb, 'Alerts', data, 18)
+  return downloadWorkbook(wb, filename)
 }
 
 export function exportSummaryReport(kpis, loans, filename = 'NPL_Summary') {
-  const wb = XLSX.utils.book_new()
+  const wb = new ExcelJS.Workbook()
 
   // Summary sheet
   const summaryData = [
@@ -70,14 +95,14 @@ export function exportSummaryReport(kpis, loans, filename = 'NPL_Summary') {
     { Metric: 'NPL Loan Count',     Value: kpis.nplCount },
     { Metric: 'Report Date',        Value: new Date().toLocaleDateString() },
   ]
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryData), 'Summary')
+  addSheetFromJson(wb, 'Summary', summaryData, 18)
 
   // NPL loans sheet
   const nplData = loans.filter(l => l.isNPL).map(l => ({
     'Loan ID': l.id, 'Customer': l.customerName, 'Outstanding': l.outstanding,
     'DPD': l.dpd, 'Classification': l.classification, 'Provision': Math.round(l.provision),
   }))
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(nplData), 'NPL Loans')
+  addSheetFromJson(wb, 'NPL Loans', nplData, 14)
 
-  XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`)
+  return downloadWorkbook(wb, filename)
 }
