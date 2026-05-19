@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { Database, Bot, Shield, Bell, Save, TestTube2, ExternalLink, CheckCircle, AlertTriangle, Users } from 'lucide-react'
+import { Database, Bot, Shield, Bell, Save, TestTube2, ExternalLink, CheckCircle, AlertTriangle } from 'lucide-react'
 import Card, { CardHeader } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input  from '../components/ui/Input'
 import { useGoogleSheets } from '../hooks/useGoogleSheets'
 import { sendTelegramAlert, formatTelegramMessage } from '../services/alertService'
-import { saveScriptUrl, getScriptUrl, testScriptConnection } from '../services/authSheetService'
 import { NPL_RATIO_ALERT_THRESHOLD } from '../utils/constants'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
@@ -25,23 +24,6 @@ function Section({ icon: Icon, title, children }) {
 }
 
 export default function Settings() {
-  // Auth script state
-  const [scriptUrl,    setScriptUrl]    = useState(getScriptUrl)
-  const [testingScript, setTestingScript] = useState(false)
-
-  const handleSaveScriptUrl = () => {
-    saveScriptUrl(scriptUrl)
-    toast.success('Auth script URL saved')
-  }
-
-  const handleTestScript = async () => {
-    if (!scriptUrl.trim()) { toast.error('Paste the Apps Script URL first'); return }
-    setTestingScript(true)
-    const ok = await testScriptConnection(scriptUrl.trim())
-    setTestingScript(false)
-    ok ? toast.success('Connection successful! Auth is ready.') : toast.error('Could not reach the script. Check the URL and deployment settings.')
-  }
-
   // Google Sheets state
   const [sheetId,  setSheetId]  = useState(import.meta.env.VITE_GOOGLE_SHEET_ID  ?? '')
   const [apiKey,   setApiKey]   = useState(import.meta.env.VITE_GOOGLE_SHEETS_API_KEY ?? '')
@@ -82,50 +64,6 @@ export default function Settings() {
 
   return (
     <div className="space-y-5 max-w-3xl">
-
-      {/* ── User Authentication ── */}
-      <Section icon={Users} title="User Authentication (Google Sheets)">
-        <div className="space-y-4">
-          <div className="p-4 bg-violet-50 border border-violet-100 rounded-xl text-sm">
-            <p className="font-semibold text-violet-800 mb-2">Why connect?</p>
-            <p className="text-violet-700 text-xs leading-relaxed">
-              By default, accounts are stored only in this browser. Connect a Google Apps Script so accounts are shared across all devices — anyone can sign up once and log in from anywhere.
-            </p>
-          </div>
-
-          <Input
-            label="Apps Script Web App URL"
-            value={scriptUrl}
-            onChange={e => setScriptUrl(e.target.value)}
-            placeholder="https://script.google.com/macros/s/…/exec"
-            helper="Deploy the auth script (see instructions below) and paste the URL here"
-          />
-
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-            <p className="text-xs font-semibold text-slate-700 mb-3 flex items-center gap-2">
-              <ExternalLink size={13} /> Setup Instructions
-            </p>
-            <ol className="text-xs text-slate-600 space-y-1.5 list-decimal list-inside leading-relaxed">
-              <li>Open <strong>script.google.com</strong> → New project</li>
-              <li>Delete any existing code, then paste the script from <code className="bg-slate-200 px-1 rounded">google-sheet-template/auth-apps-script.js</code> in the repo</li>
-              <li>Replace <code className="bg-slate-200 px-1 rounded">YOUR_SPREADSHEET_ID</code> with the ID of a Google Sheet you own</li>
-              <li>In that Sheet, create a tab named <strong>Users</strong></li>
-              <li>Click <strong>Deploy → New deployment → Web app</strong></li>
-              <li>Set <em>Execute as</em>: <strong>Me</strong> · <em>Who has access</em>: <strong>Anyone</strong></li>
-              <li>Copy the deployment URL and paste it above</li>
-            </ol>
-          </div>
-
-          <div className="flex gap-3">
-            <Button variant="secondary" size="sm" icon={TestTube2} loading={testingScript} onClick={handleTestScript}>
-              Test Connection
-            </Button>
-            <Button size="sm" icon={Save} onClick={handleSaveScriptUrl}>
-              Save URL
-            </Button>
-          </div>
-        </div>
-      </Section>
 
       {/* ── Google Sheets ── */}
       <Section icon={Database} title="Google Sheets Integration">
