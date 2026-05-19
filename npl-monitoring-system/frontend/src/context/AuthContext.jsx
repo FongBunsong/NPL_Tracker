@@ -1,36 +1,61 @@
-import { createContext, useState, useCallback, useEffect } from 'react'
+import { createContext, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 
 export const AuthContext = createContext(null)
 
-// Demo credentials — replace with real auth API in production
-const DEMO_USERS = [
-  { id: 1, email: 'admin@nplmonitor.com',   password: 'admin123',   name: 'Admin User',    role: 'admin',   avatar: 'AU', branch: 'Head Office' },
-  { id: 2, email: 'officer@nplmonitor.com', password: 'officer123', name: 'Loan Officer',  role: 'officer', avatar: 'LO', branch: 'Head Office' },
-  { id: 3, email: 'manager@nplmonitor.com', password: 'manager123', name: 'Branch Manager',role: 'manager', avatar: 'BM', branch: 'Phnom Penh Branch' },
-]
+const USERS_KEY   = 'npl_users'
+const SESSION_KEY = 'npl_user'
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) ?? '[]') } catch { return [] }
+}
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users))
+}
+function initials(name = '') {
+  return name.trim().split(/\s+/).map(w => w[0]?.toUpperCase() ?? '').join('').slice(0, 2) || '?'
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const stored = localStorage.getItem('npl_user')
+      const stored = localStorage.getItem(SESSION_KEY)
       return stored ? JSON.parse(stored) : null
-    } catch {
-      return null
-    }
+    } catch { return null }
   })
   const [loading, setLoading] = useState(false)
 
+  const register = useCallback(async (name, email, password) => {
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 500))
+    const users = getUsers()
+    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+      setLoading(false)
+      toast.error('An account with this email already exists')
+      return false
+    }
+    const newUser = { id: Date.now(), name, email, password, avatar: initials(name) }
+    saveUsers([...users, newUser])
+    const { password: _pw, ...safeUser } = newUser
+    setUser(safeUser)
+    localStorage.setItem(SESSION_KEY, JSON.stringify(safeUser))
+    setLoading(false)
+    toast.success(`Welcome, ${name}!`)
+    return true
+  }, [])
+
   const login = useCallback(async (email, password) => {
     setLoading(true)
-    // Simulate network latency
-    await new Promise(r => setTimeout(r, 700))
-    const match = DEMO_USERS.find(u => u.email === email && u.password === password)
+    await new Promise(r => setTimeout(r, 500))
+    const users = getUsers()
+    const match = users.find(
+      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    )
     setLoading(false)
     if (match) {
       const { password: _pw, ...safeUser } = match
       setUser(safeUser)
-      localStorage.setItem('npl_user', JSON.stringify(safeUser))
+      localStorage.setItem(SESSION_KEY, JSON.stringify(safeUser))
       toast.success(`Welcome back, ${safeUser.name}!`)
       return true
     }
@@ -40,12 +65,12 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     setUser(null)
-    localStorage.removeItem('npl_user')
-    toast.success('Logged out successfully')
+    localStorage.removeItem(SESSION_KEY)
+    toast.success('Logged out')
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )

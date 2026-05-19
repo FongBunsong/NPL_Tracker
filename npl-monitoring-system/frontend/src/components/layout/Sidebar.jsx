@@ -105,11 +105,11 @@ export default function Sidebar() {
       <div className="px-3 pb-4 border-t border-slate-700/50 pt-3 flex-shrink-0">
         <div className="flex items-center gap-3 px-2 py-1.5">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-            {user?.avatar ?? '?'}
+            {user?.avatar ?? user?.name?.slice(0,2).toUpperCase() ?? '?'}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium truncate">{user?.name}</p>
-            <p className="text-slate-500 text-[11px] capitalize">{user?.role}</p>
+            <p className="text-slate-500 text-[11px] truncate">{user?.email}</p>
           </div>
           <button
             onClick={logout}
