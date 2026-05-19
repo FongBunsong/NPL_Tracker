@@ -1,0 +1,31 @@
+# Node & npm
+node_modules/
+npm-debug.log*
+yarn-error.log
+.pnpm-debug.log
+
+# Environment secrets — never commit
+.env
+.env.local
+.env.production
+.env.*.local
+backend/.env
+
+# Build output
+dist/
+build/
+frontend/dist/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Misc
+coverage/
+.nyc_output/

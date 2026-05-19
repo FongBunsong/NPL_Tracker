@@ -1,0 +1,6 @@
+Loan ID,Customer ID,Customer Name,Loan Amount,Outstanding Balance,Days Past Due,Disbursement Date,Maturity Date,Interest Rate,Loan Type,Collateral Type,Collateral Value,Branch,Loan Officer,Last Payment Date,Phone,Email
+L-2024-001,C001,Sopheap Chan,25000,18500,0,2023-01-15,2026-01-15,14.5,Business,Property,45000,Phnom Penh,Dara Sok,2024-10-01,+855 12 345 678,sopheap.chan@email.com
+L-2024-002,C002,Piseth Kim,15000,12000,25,2023-03-01,2025-03-01,16.0,Agriculture,Land,30000,Siem Reap,Chanthy Lim,2024-09-05,+855 11 234 567,piseth.kim@email.com
+L-2024-003,C003,Chantrea Ros,50000,42000,92,2022-06-20,2025-06-20,18.5,SME,Equipment,55000,Battambang,Sokha Pov,2024-07-10,+855 15 456 789,chantrea.ros@email.com
+L-2024-004,C004,Visal Oun,8000,6500,10,2024-01-10,2026-01-10,15.0,Consumer,Vehicle,12000,Kampot,Dara Sok,2024-10-10,+855 16 567 890,visal.oun@email.com
+L-2024-005,C005,Maly Heng,80000,72000,185,2021-11-05,2024-11-05,22.0,SME,Property,100000,Phnom Penh,Chanthy Lim,2024-04-20,+855 17 678 901,maly.heng@email.com
